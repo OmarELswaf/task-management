@@ -1,0 +1,1 @@
+{"_tag":"Error","error":{"code":"UnknownSubcommand","message":"Unknown subcommand \"execute\" for \"supabase db\""}}
