@@ -1,97 +1,11 @@
-version: "3.8"
-
 services:
-  db:
-    image: supabase/postgres:15.8.1.020
-    environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "5432:5432"
-    volumes:
-      - db-data:/var/lib/postgresql/data
-      - ./supabase/migrations:/docker-entrypoint-initdb.d/migrations:ro
-      - ./supabase/init/01-set-passwords.sql:/docker-entrypoint-initdb.d/01-set-passwords.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-  auth:
-    image: supabase/gotrue:v2.132.3
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      GOTRUE_API_HOST: 0.0.0.0
-      GOTRUE_API_PORT: 9999
-      API_EXTERNAL_URL: http://localhost:5173
-      GOTRUE_DB_DRIVER: postgres
-      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:postgres@db:5432/postgres
-      GOTRUE_SITE_URL: http://localhost:5173
-      GOTRUE_JWT_SECRET: your-super-secret-jwt-token-with-at-least-32-characters-long
-      GOTRUE_JWT_EXP: 3600
-      GOTRUE_DISABLE_SIGNUP: "false"
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:9999/health || exit 1"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-  rest:
-    image: postgrest/postgrest:v12.2.0
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/postgres
-      PGRST_DB_SCHEMAS: public
-      PGRST_DB_ANON_ROLE: anon
-      PGRST_JWT_SECRET: ${JWT_SECRET}
-      PGRST_DB_MAX_ROWS: 100
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/ || exit 1"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:-http://localhost:5173}
-        VITE_SUPABASE_ANON_KEY: ${ANON_KEY}
+        VITE_SUPABASE_URL: http://localhost:5173
+        VITE_SUPABASE_ANON_KEY: sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH
+
     ports:
       - "5173:80"
-    depends_on:
-      - auth
-      - rest
-
-  seed:
-    image: alpine:3.19
-    depends_on:
-      db:
-        condition: service_healthy
-      auth:
-        condition: service_healthy
-    volumes:
-      - ./supabase/seed.sql:/seed.sql:ro
-    environment:
-      PGPASSWORD: ${POSTGRES_PASSWORD}
-    command: >
-      sh -c "
-        apk add --no-cache postgresql-client curl &&
-        echo 'Waiting for PostgreSQL...' &&
-        until pg_isready -h db -U postgres; do sleep 2; done &&
-        echo 'PostgreSQL ready!' &&
-        echo 'Waiting for GoTrue...' &&
-        until curl -s http://auth:9999/health | grep -q 'ok'; do sleep 2; done &&
-        echo 'GoTrue ready!' &&
-        echo 'Running database seed...' &&
-        psql -h db -U postgres -f /seed.sql &&
-        echo 'Seed completed successfully!'
-      "
-
-volumes:
-  db-data:

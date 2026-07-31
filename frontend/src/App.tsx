@@ -6,19 +6,23 @@ import { Register } from "@/pages/auth/Register";
 import { ProjectsList } from "@/pages/projects/ProjectsList";
 import { ProjectDetail } from "@/pages/projects/ProjectDetail";
 import { useAuth } from "@/contexts/AuthContext";
+import { LogoutButton } from "@/components/common/LogoutButton";
 
 function Dashboard() {
   const { user } = useAuth();
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">
-          Welcome{user?.email ? `, ${user.email}` : ""}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Manage your projects and tasks
-        </p>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Welcome{user?.email ? `, ${user.email}` : ""}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Manage your projects and tasks
+          </p>
+        </div>
+        <LogoutButton />
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2">

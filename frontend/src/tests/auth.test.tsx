@@ -1,11 +1,12 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Login } from "@/pages/auth/Login";
 import { Register } from "@/pages/auth/Register";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { LogoutButton } from "@/components/common/LogoutButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 
@@ -225,5 +226,86 @@ describe("ProtectedRoute", () => {
     await waitFor(() => {
       expect(screen.getByText("Protected Content")).toBeInTheDocument();
     });
+  });
+});
+
+describe("LogoutButton", () => {
+  function LogoutHarness() {
+    return (
+      <Routes>
+        <Route path="/login" element={<div>Login Page</div>} />
+        <Route path="*" element={<LogoutButton />} />
+      </Routes>
+    );
+  }
+
+  function renderLogoutHarness() {
+    return render(
+      <MemoryRouter initialEntries={["/protected"]}>
+        <AuthProvider>
+          <LogoutHarness />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+  }
+
+  it("renders sign out button", () => {
+    renderLogoutHarness();
+    expect(screen.getByRole("button", { name: /sign out/i })).toBeInTheDocument();
+  });
+
+  it("calls signOut and redirects to /login on success", async () => {
+    const user = userEvent.setup();
+    (supabase.auth.signOut as ReturnType<typeof vi.fn>).mockResolvedValue({
+      error: null,
+    });
+
+    renderLogoutHarness();
+
+    await user.click(screen.getByRole("button", { name: /sign out/i }));
+
+    await waitFor(() => {
+      expect(supabase.auth.signOut).toHaveBeenCalled();
+    });
+    expect(await screen.findByText("Login Page")).toBeInTheDocument();
+  });
+
+  it("shows loading state and prevents double clicks while signing out", async () => {
+    const user = userEvent.setup();
+    let resolveSignOut: (value: { error: null }) => void = () => {};
+    (supabase.auth.signOut as ReturnType<typeof vi.fn>).mockReturnValue(
+      new Promise((resolve) => {
+        resolveSignOut = resolve;
+      })
+    );
+
+    renderLogoutHarness();
+
+    await user.click(screen.getByRole("button", { name: /sign out/i }));
+
+    expect(screen.getByText("Signing out...")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /signing out/i })).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: /signing out/i }));
+    expect(supabase.auth.signOut).toHaveBeenCalledTimes(1);
+
+    resolveSignOut({ error: null });
+  });
+
+  it("shows error message and stays on page when signOut fails", async () => {
+    const user = userEvent.setup();
+    (supabase.auth.signOut as ReturnType<typeof vi.fn>).mockResolvedValue({
+      error: { message: "Logout failed" },
+    });
+
+    renderLogoutHarness();
+
+    await user.click(screen.getByRole("button", { name: /sign out/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Logout failed")).toBeInTheDocument();
+    });
+    expect(screen.queryByText("Login Page")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /sign out/i })).not.toBeDisabled();
   });
 });
