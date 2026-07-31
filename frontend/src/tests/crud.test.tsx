@@ -39,11 +39,10 @@ const mockTask = {
 
 const mockComment = {
   id: "comment-1",
-  content: "This is a test comment",
+  message: "This is a test comment",
   task_id: "task-1",
-  user_id: "user-1",
+  author_id: "user-1",
   created_at: "2024-01-17T10:00:00Z",
-  updated_at: "2024-01-17T10:00:00Z",
 };
 
 beforeEach(() => {

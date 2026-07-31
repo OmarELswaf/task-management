@@ -101,27 +101,24 @@ export interface Database {
       comments: {
         Row: {
           id: string;
-          content: string;
+          message: string;
           task_id: string;
-          user_id: string;
+          author_id: string;
           created_at: string;
-          updated_at: string;
         };
         Insert: {
           id?: string;
-          content: string;
+          message: string;
           task_id: string;
-          user_id: string;
+          author_id: string;
           created_at?: string;
-          updated_at?: string;
         };
         Update: {
           id?: string;
-          content?: string;
+          message?: string;
           task_id?: string;
-          user_id?: string;
+          author_id?: string;
           created_at?: string;
-          updated_at?: string;
         };
         Relationships: [
           {
@@ -131,8 +128,8 @@ export interface Database {
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "comments_user_id_fkey";
-            columns: ["user_id"];
+            foreignKeyName: "comments_author_id_fkey";
+            columns: ["author_id"];
             referencedRelation: "users";
             referencedColumns: ["id"];
           }

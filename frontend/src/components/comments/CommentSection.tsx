@@ -40,9 +40,9 @@ export function CommentSection({ taskId }: CommentSectionProps) {
 
     setSubmitting(true);
     const created = await addComment({
-      content: trimmed,
+      message: trimmed,
       task_id: taskId,
-      user_id: user!.id,
+      author_id: user!.id,
     });
     setSubmitting(false);
 
@@ -99,13 +99,13 @@ export function CommentSection({ taskId }: CommentSectionProps) {
             >
               <div className="mb-1 flex items-center justify-between">
                 <span className="text-xs font-medium">
-                  {comment.user_id === user?.id ? "You" : comment.user_id.slice(0, 8)}
+                  {comment.author_id === user?.id ? "You" : comment.author_id.slice(0, 8)}
                 </span>
                 <span className="text-xs text-muted-foreground">
                   {formatDateTime(comment.created_at)}
                 </span>
               </div>
-              <p className="text-sm">{comment.content}</p>
+              <p className="text-sm">{comment.message}</p>
             </div>
           ))}
         </div>
