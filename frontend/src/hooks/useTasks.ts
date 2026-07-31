@@ -7,7 +7,7 @@ type Task = Tables<"tasks">;
 type TaskStatus = Database["public"]["Enums"]["task_status"];
 type TaskPriority = Database["public"]["Enums"]["task_priority"];
 
-const DEFAULT_PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 4;
 
 export interface FetchTasksParams {
   projectId: string;

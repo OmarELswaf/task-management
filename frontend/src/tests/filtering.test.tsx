@@ -82,10 +82,10 @@ describe("TaskFilters", () => {
     renderWithProviders(<TaskFilters values={defaultValues} onChange={onChange} />);
 
     const statusSelect = screen.getByLabelText(/status/i);
-    await user.selectOptions(statusSelect, "in_progress");
+    await user.selectOptions(statusSelect, "In Progress");
 
     expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ status: "in_progress" })
+      expect.objectContaining({ status: "In Progress" })
     );
   });
 
@@ -96,16 +96,16 @@ describe("TaskFilters", () => {
     renderWithProviders(<TaskFilters values={defaultValues} onChange={onChange} />);
 
     const prioritySelect = screen.getByLabelText(/priority/i);
-    await user.selectOptions(prioritySelect, "urgent");
+    await user.selectOptions(prioritySelect, "High");
 
     expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ priority: "urgent" })
+      expect.objectContaining({ priority: "High" })
     );
   });
 
   it("shows clear filters button when filters are active", () => {
     const onChange = vi.fn();
-    const activeValues = { ...defaultValues, search: "active", status: "todo" as const };
+    const activeValues = { ...defaultValues, search: "active", status: "Todo" as const };
 
     renderWithProviders(<TaskFilters values={activeValues} onChange={onChange} />);
 
@@ -115,7 +115,7 @@ describe("TaskFilters", () => {
   it("clears all filters when clear button is clicked", async () => {
     const onChange = vi.fn();
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    const activeValues = { ...defaultValues, search: "active", status: "todo" as const };
+    const activeValues = { ...defaultValues, search: "active", status: "Todo" as const };
 
     renderWithProviders(<TaskFilters values={activeValues} onChange={onChange} />);
 

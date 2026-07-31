@@ -109,13 +109,7 @@ export function ProjectDetail() {
     if (values.priority) params.priority = values.priority;
     if (values.dueDateFrom) params.dueDateFrom = values.dueDateFrom;
     if (values.dueDateTo) params.dueDateTo = values.dueDateTo;
-
-    const prevSearch = searchParams.get("search") || "";
-    const needsPageReset = values.search !== prevSearch;
-    if (needsPageReset) {
-      params.page = "";
-    }
-
+    params.page = "";
     updateUrl(params);
   }
 

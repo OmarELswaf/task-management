@@ -16,18 +16,15 @@ interface TaskModalProps {
 }
 
 const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
-  { value: "backlog", label: "Backlog" },
-  { value: "todo", label: "Todo" },
-  { value: "in_progress", label: "In Progress" },
-  { value: "in_review", label: "In Review" },
-  { value: "done", label: "Done" },
+  { value: "Todo", label: "Todo" },
+  { value: "In Progress", label: "In Progress" },
+  { value: "Done", label: "Done" },
 ];
 
 const PRIORITY_OPTIONS: { value: TaskPriority; label: string }[] = [
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
-  { value: "urgent", label: "Urgent" },
+  { value: "Low", label: "Low" },
+  { value: "Medium", label: "Medium" },
+  { value: "High", label: "High" },
 ];
 
 export function TaskModal({
@@ -40,8 +37,8 @@ export function TaskModal({
 }: TaskModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [status, setStatus] = useState<TaskStatus>("todo");
-  const [priority, setPriority] = useState<TaskPriority>("medium");
+  const [status, setStatus] = useState<TaskStatus>("Todo");
+  const [priority, setPriority] = useState<TaskPriority>("Medium");
   const [dueDate, setDueDate] = useState("");
   const [titleError, setTitleError] = useState<string | null>(null);
 
@@ -51,8 +48,8 @@ export function TaskModal({
     if (open) {
       setTitle(task?.title ?? "");
       setDescription(task?.description ?? "");
-      setStatus(task?.status ?? "todo");
-      setPriority(task?.priority ?? "medium");
+      setStatus(task?.status ?? "Todo");
+      setPriority(task?.priority ?? "Medium");
       setDueDate(task?.due_date ? task.due_date.slice(0, 10) : "");
       setTitleError(null);
     }

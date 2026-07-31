@@ -142,8 +142,8 @@ export interface Database {
     Views: {};
     Functions: {};
     Enums: {
-      task_status: "backlog" | "todo" | "in_progress" | "in_review" | "done";
-      task_priority: "low" | "medium" | "high" | "urgent";
+      task_status: "Todo" | "In Progress" | "Done";
+      task_priority: "Low" | "Medium" | "High";
     };
     CompositeTypes: {};
   };

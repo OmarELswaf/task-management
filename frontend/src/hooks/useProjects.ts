@@ -4,7 +4,7 @@ import type { Tables, TablesInsert, TablesUpdate } from "@/types/database";
 
 type Project = Tables<"projects">;
 
-const DEFAULT_PAGE_SIZE = 12;
+const DEFAULT_PAGE_SIZE = 4;
 
 export interface FetchProjectsParams {
   search?: string;

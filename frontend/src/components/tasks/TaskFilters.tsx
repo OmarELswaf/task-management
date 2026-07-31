@@ -17,21 +17,22 @@ interface TaskFiltersProps {
   onChange: (values: TaskFilterValues) => void;
 }
 
+// Known limitation: an "Assignee" filter is intentionally not provided.
+// There is no queryable users/profiles table in the schema (auth.users is
+// not exposed via PostgREST), so assignee-based filtering cannot be
+// supported without a schema change.
 const statusOptions: { value: TaskStatus | ""; label: string }[] = [
   { value: "", label: "All Status" },
-  { value: "backlog", label: "Backlog" },
-  { value: "todo", label: "Todo" },
-  { value: "in_progress", label: "In Progress" },
-  { value: "in_review", label: "In Review" },
-  { value: "done", label: "Done" },
+  { value: "Todo", label: "Todo" },
+  { value: "In Progress", label: "In Progress" },
+  { value: "Done", label: "Done" },
 ];
 
 const priorityOptions: { value: TaskPriority | ""; label: string }[] = [
   { value: "", label: "All Priority" },
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
-  { value: "urgent", label: "Urgent" },
+  { value: "Low", label: "Low" },
+  { value: "Medium", label: "Medium" },
+  { value: "High", label: "High" },
 ];
 
 export function TaskFilters({ values, onChange }: TaskFiltersProps) {

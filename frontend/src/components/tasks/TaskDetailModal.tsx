@@ -13,24 +13,18 @@ interface TaskDetailModalProps {
 }
 
 const statusConfig: Record<TaskStatus, { label: string; class: string }> = {
-  backlog: { label: "Backlog", class: "bg-gray-100 text-gray-700 border-gray-200" },
-  todo: { label: "Todo", class: "bg-blue-100 text-blue-700 border-blue-200" },
-  in_progress: {
+  Todo: { label: "Todo", class: "bg-blue-100 text-blue-700 border-blue-200" },
+  "In Progress": {
     label: "In Progress",
     class: "bg-yellow-100 text-yellow-700 border-yellow-200",
   },
-  in_review: {
-    label: "In Review",
-    class: "bg-purple-100 text-purple-700 border-purple-200",
-  },
-  done: { label: "Done", class: "bg-green-100 text-green-700 border-green-200" },
+  Done: { label: "Done", class: "bg-green-100 text-green-700 border-green-200" },
 };
 
 const priorityColors: Record<string, string> = {
-  low: "bg-slate-100 text-slate-600 border-slate-200",
-  medium: "bg-blue-100 text-blue-700 border-blue-200",
-  high: "bg-orange-100 text-orange-700 border-orange-200",
-  urgent: "bg-red-100 text-red-700 border-red-200",
+  Low: "bg-slate-100 text-slate-600 border-slate-200",
+  Medium: "bg-blue-100 text-blue-700 border-blue-200",
+  High: "bg-orange-100 text-orange-700 border-orange-200",
 };
 
 function formatDate(dateStr: string | null): string {
@@ -63,13 +57,7 @@ export function TaskDetailModal({
 
   const statusInfo = statusConfig[task.status];
 
-  const statusCycle: TaskStatus[] = [
-    "backlog",
-    "todo",
-    "in_progress",
-    "in_review",
-    "done",
-  ];
+  const statusCycle: TaskStatus[] = ["Todo", "In Progress", "Done"];
   const currentIdx = statusCycle.indexOf(task.status);
 
   function canMoveTo(s: TaskStatus): boolean {
