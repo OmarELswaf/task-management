@@ -79,18 +79,7 @@ export function ProjectDetail() {
   useEffect(() => {
     if (!projectId) return;
 
-    const params: FetchTasksParams = {
-      projectId,
-      page: pageFromUrl,
-    };
-
-    if (filterValues.search) params.search = filterValues.search;
-    if (filterValues.status) params.status = filterValues.status;
-    if (filterValues.priority) params.priority = filterValues.priority;
-    if (filterValues.dueDateFrom) params.dueDateFrom = filterValues.dueDateFrom;
-    if (filterValues.dueDateTo) params.dueDateTo = filterValues.dueDateTo;
-
-    fetchTasks(params);
+    fetchTasks(buildTaskParams(filterValues, pageFromUrl));
   }, [projectId, fetchTasks, pageFromUrl, filterValues.search, filterValues.status, filterValues.priority, filterValues.dueDateFrom, filterValues.dueDateTo]);
 
   function updateUrl(params: Record<string, string>) {
@@ -102,15 +91,30 @@ export function ProjectDetail() {
     setSearchParams(next, { replace: true });
   }
 
-  function handleFilterChange(values: TaskFilterValues) {
-    const params: Record<string, string> = {};
+  function buildTaskParams(values: TaskFilterValues, page: number): FetchTasksParams {
+    const params: FetchTasksParams = {
+      projectId: projectId!,
+      page,
+    };
+
     if (values.search) params.search = values.search;
     if (values.status) params.status = values.status;
     if (values.priority) params.priority = values.priority;
     if (values.dueDateFrom) params.dueDateFrom = values.dueDateFrom;
     if (values.dueDateTo) params.dueDateTo = values.dueDateTo;
-    params.page = "";
-    updateUrl(params);
+
+    return params;
+  }
+
+  function handleFilterChange(values: TaskFilterValues) {
+    updateUrl({
+      search: values.search,
+      status: values.status,
+      priority: values.priority,
+      dueDateFrom: values.dueDateFrom,
+      dueDateTo: values.dueDateTo,
+      page: "",
+    });
   }
 
   function handlePageChange(p: number) {
@@ -124,11 +128,18 @@ export function ProjectDetail() {
 
     if (editingTask) {
       await updateTask(editingTask.id, data as TablesUpdate<"tasks">);
+      await fetchTasks(buildTaskParams(filterValues, pageFromUrl));
     } else {
       await createTask({
         ...(data as TablesInsert<"tasks">),
         project_id: projectId!,
       });
+
+      if (pageFromUrl === 1) {
+        await fetchTasks(buildTaskParams(filterValues, 1));
+      } else {
+        updateUrl({ page: "" });
+      }
     }
 
     setSavingTask(false);
@@ -138,8 +149,16 @@ export function ProjectDetail() {
 
   async function handleDeleteTask(id: string) {
     setDeletingTaskId(id);
-    await deleteTask(id);
+    const success = await deleteTask(id);
     setDeletingTaskId(null);
+
+    if (!success) return;
+
+    if (tasks.length === 1 && pageFromUrl > 1) {
+      updateUrl({ page: pageFromUrl > 2 ? String(pageFromUrl - 1) : "" });
+    } else {
+      await fetchTasks(buildTaskParams(filterValues, pageFromUrl));
+    }
   }
 
   async function handleStatusChange(id: string, status: TaskStatus) {

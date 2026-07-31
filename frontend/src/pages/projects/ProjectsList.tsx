@@ -72,11 +72,18 @@ export function ProjectsList() {
 
     if (editingProject) {
       await updateProject(editingProject.id, data as TablesUpdate<"projects">);
+      await fetchProjects({ search: searchFromUrl, page: pageFromUrl });
     } else {
       await createProject({
         ...(data as TablesInsert<"projects">),
         user_id: user!.id,
       });
+
+      if (pageFromUrl === 1) {
+        await fetchProjects({ search: searchFromUrl, page: 1 });
+      } else {
+        updateUrl({ page: "" });
+      }
     }
 
     setSaving(false);
@@ -90,6 +97,13 @@ export function ProjectsList() {
     setDeletingId(null);
     if (!success) {
       alert("Failed to delete project");
+      return;
+    }
+
+    if (projects.length === 1 && pageFromUrl > 1) {
+      updateUrl({ page: pageFromUrl > 2 ? String(pageFromUrl - 1) : "" });
+    } else {
+      await fetchProjects({ search: searchFromUrl, page: pageFromUrl });
     }
   }
 
