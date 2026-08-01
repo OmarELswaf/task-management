@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import type { Database } from "@/types/database";
 
 type TaskStatus = Database["public"]["Enums"]["task_status"];
@@ -35,7 +35,10 @@ const priorityOptions: { value: TaskPriority | ""; label: string }[] = [
   { value: "High", label: "High" },
 ];
 
-export function TaskFilters({ values, onChange }: TaskFiltersProps) {
+export const TaskFilters = memo(function TaskFilters({
+  values,
+  onChange,
+}: TaskFiltersProps) {
   const [searchInput, setSearchInput] = useState(values.search);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
@@ -197,4 +200,4 @@ export function TaskFilters({ values, onChange }: TaskFiltersProps) {
       </div>
     </div>
   );
-}
+});

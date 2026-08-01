@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Link } from "react-router-dom";
 import type { Tables } from "@/types/database";
 import { formatDate } from "@/lib/format";
@@ -27,7 +28,12 @@ function getColorClass(color: string | null): string {
   return colorMap[c] ?? "bg-slate-100 text-slate-700 border-slate-200";
 }
 
-export function ProjectCard({ project, onEdit, onDelete, deleting }: ProjectCardProps) {
+export const ProjectCard = memo(function ProjectCard({
+  project,
+  onEdit,
+  onDelete,
+  deleting,
+}: ProjectCardProps) {
   return (
     <div className="group rounded-lg border bg-card p-5 shadow-sm transition-shadow hover:shadow-md">
       <div className="mb-3 flex items-start justify-between gap-4">
@@ -73,4 +79,4 @@ export function ProjectCard({ project, onEdit, onDelete, deleting }: ProjectCard
       </div>
     </div>
   );
-}
+});

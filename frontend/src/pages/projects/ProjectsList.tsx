@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProjects } from "@/hooks/useProjects";
@@ -40,14 +40,17 @@ export function ProjectsList() {
     fetchProjects({ search: searchFromUrl, page: pageFromUrl });
   }, [fetchProjects, searchFromUrl, pageFromUrl]);
 
-  function updateUrl(params: Record<string, string>) {
-    const next = new URLSearchParams(searchParams);
-    for (const [key, value] of Object.entries(params)) {
-      if (value) next.set(key, value);
-      else next.delete(key);
-    }
-    setSearchParams(next, { replace: true });
-  }
+  const updateUrl = useCallback(
+    (params: Record<string, string>) => {
+      const next = new URLSearchParams(searchParams);
+      for (const [key, value] of Object.entries(params)) {
+        if (value) next.set(key, value);
+        else next.delete(key);
+      }
+      setSearchParams(next, { replace: true });
+    },
+    [searchParams, setSearchParams]
+  );
 
   function handleSearchChange(value: string) {
     setSearchInput(value);
@@ -61,56 +64,79 @@ export function ProjectsList() {
     }, 300);
   }
 
-  function handlePageChange(p: number) {
-    updateUrl({ page: p > 1 ? String(p) : "", search: searchFromUrl });
-  }
+  const handlePageChange = useCallback(
+    (p: number) => {
+      updateUrl({ page: p > 1 ? String(p) : "", search: searchFromUrl });
+    },
+    [updateUrl, searchFromUrl]
+  );
 
-  async function handleSave(
-    data: TablesInsert<"projects"> | TablesUpdate<"projects">
-  ) {
-    setSaving(true);
+  const handleSave = useCallback(
+    async (data: TablesInsert<"projects"> | TablesUpdate<"projects">) => {
+      setSaving(true);
 
-    if (editingProject) {
-      await updateProject(editingProject.id, data as TablesUpdate<"projects">);
-      await fetchProjects({ search: searchFromUrl, page: pageFromUrl });
-    } else {
-      await createProject({
-        ...(data as TablesInsert<"projects">),
-        user_id: user!.id,
-      });
-
-      if (pageFromUrl === 1) {
-        await fetchProjects({ search: searchFromUrl, page: 1 });
+      if (editingProject) {
+        await updateProject(editingProject.id, data as TablesUpdate<"projects">);
+        await fetchProjects({ search: searchFromUrl, page: pageFromUrl });
       } else {
-        updateUrl({ page: "" });
+        await createProject({
+          ...(data as TablesInsert<"projects">),
+          user_id: user!.id,
+        });
+
+        if (pageFromUrl === 1) {
+          await fetchProjects({ search: searchFromUrl, page: 1 });
+        } else {
+          updateUrl({ page: "" });
+        }
       }
-    }
 
-    setSaving(false);
-    setModalOpen(false);
-    setEditingProject(null);
-  }
+      setSaving(false);
+      setModalOpen(false);
+      setEditingProject(null);
+    },
+    [
+      editingProject,
+      user,
+      pageFromUrl,
+      searchFromUrl,
+      updateUrl,
+      fetchProjects,
+      updateProject,
+      createProject,
+    ]
+  );
 
-  async function handleDelete(id: string) {
-    setDeletingId(id);
-    const success = await deleteProject(id);
-    setDeletingId(null);
-    if (!success) {
-      alert("Failed to delete project");
-      return;
-    }
+  const handleDelete = useCallback(
+    async (id: string) => {
+      setDeletingId(id);
+      const success = await deleteProject(id);
+      setDeletingId(null);
+      if (!success) {
+        alert("Failed to delete project");
+        return;
+      }
 
-    if (projects.length === 1 && pageFromUrl > 1) {
-      updateUrl({ page: pageFromUrl > 2 ? String(pageFromUrl - 1) : "" });
-    } else {
-      await fetchProjects({ search: searchFromUrl, page: pageFromUrl });
-    }
-  }
+      if (projects.length === 1 && pageFromUrl > 1) {
+        updateUrl({ page: pageFromUrl > 2 ? String(pageFromUrl - 1) : "" });
+      } else {
+        await fetchProjects({ search: searchFromUrl, page: pageFromUrl });
+      }
+    },
+    [
+      projects.length,
+      pageFromUrl,
+      searchFromUrl,
+      updateUrl,
+      fetchProjects,
+      deleteProject,
+    ]
+  );
 
-  function handleEdit(project: Project) {
+  const handleEdit = useCallback((project: Project) => {
     setEditingProject(project);
     setModalOpen(true);
-  }
+  }, []);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">

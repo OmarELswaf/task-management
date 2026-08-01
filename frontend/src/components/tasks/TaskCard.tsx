@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { Tables } from "@/types/database";
 import type { Database } from "@/types/database";
 import { formatDate } from "@/lib/format";
@@ -21,7 +22,7 @@ function isOverdue(dateStr: string | null): boolean {
   return new Date(dateStr) < new Date();
 }
 
-export function TaskCard({
+export const TaskCard = memo(function TaskCard({
   task,
   onEdit,
   onDelete,
@@ -158,4 +159,4 @@ export function TaskCard({
       </div>
     </div>
   );
-}
+});

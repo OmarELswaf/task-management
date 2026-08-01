@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useTasks } from "@/hooks/useTasks";
@@ -46,13 +46,18 @@ export function ProjectDetail() {
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
 
-  const filterValues: TaskFilterValues = {
-    search: searchParams.get("search") || "",
-    status: (searchParams.get("status") as TaskStatus | "") || "",
-    priority: (searchParams.get("priority") as Task["priority"] | "") || "",
-    dueDateFrom: searchParams.get("dueDateFrom") || "",
-    dueDateTo: searchParams.get("dueDateTo") || "",
-  };
+  const filterValues: TaskFilterValues = useMemo(
+    () => ({
+      search: searchParams.get("search") || "",
+      status: (searchParams.get("status") as TaskStatus | "") || "",
+      priority: (searchParams.get("priority") as Task["priority"] | "") || "",
+      dueDateFrom: searchParams.get("dueDateFrom") || "",
+      dueDateTo: searchParams.get("dueDateTo") || "",
+    }),
+    [
+      searchParams,
+    ]
+  );
   const pageFromUrl = parseInt(searchParams.get("page") || "1", 10);
 
   useEffect(() => {
@@ -80,99 +85,141 @@ export function ProjectDetail() {
     fetchTasks(buildTaskParams(filterValues, pageFromUrl));
   }, [projectId, fetchTasks, pageFromUrl, filterValues.search, filterValues.status, filterValues.priority, filterValues.dueDateFrom, filterValues.dueDateTo]);
 
-  function updateUrl(params: Record<string, string>) {
-    const next = new URLSearchParams(searchParams);
-    for (const [key, value] of Object.entries(params)) {
-      if (value) next.set(key, value);
-      else next.delete(key);
-    }
-    setSearchParams(next, { replace: true });
-  }
-
-  function buildTaskParams(values: TaskFilterValues, page: number): FetchTasksParams {
-    const params: FetchTasksParams = {
-      projectId: projectId!,
-      page,
-    };
-
-    if (values.search) params.search = values.search;
-    if (values.status) params.status = values.status;
-    if (values.priority) params.priority = values.priority;
-    if (values.dueDateFrom) params.dueDateFrom = values.dueDateFrom;
-    if (values.dueDateTo) params.dueDateTo = values.dueDateTo;
-
-    return params;
-  }
-
-  function handleFilterChange(values: TaskFilterValues) {
-    updateUrl({
-      search: values.search,
-      status: values.status,
-      priority: values.priority,
-      dueDateFrom: values.dueDateFrom,
-      dueDateTo: values.dueDateTo,
-      page: "",
-    });
-  }
-
-  function handlePageChange(p: number) {
-    updateUrl({ page: p > 1 ? String(p) : "" });
-  }
-
-  async function handleSaveTask(
-    data: TablesInsert<"tasks"> | TablesUpdate<"tasks">
-  ) {
-    setSavingTask(true);
-
-    if (editingTask) {
-      await updateTask(editingTask.id, data as TablesUpdate<"tasks">);
-      await fetchTasks(buildTaskParams(filterValues, pageFromUrl));
-    } else {
-      await createTask({
-        ...(data as TablesInsert<"tasks">),
-        project_id: projectId!,
-      });
-
-      if (pageFromUrl === 1) {
-        await fetchTasks(buildTaskParams(filterValues, 1));
-      } else {
-        updateUrl({ page: "" });
+  const updateUrl = useCallback(
+    (params: Record<string, string>) => {
+      const next = new URLSearchParams(searchParams);
+      for (const [key, value] of Object.entries(params)) {
+        if (value) next.set(key, value);
+        else next.delete(key);
       }
-    }
+      setSearchParams(next, { replace: true });
+    },
+    [searchParams, setSearchParams]
+  );
 
-    setSavingTask(false);
-    setTaskModalOpen(false);
-    setEditingTask(null);
-  }
+  const buildTaskParams = useCallback(
+    (values: TaskFilterValues, page: number): FetchTasksParams => {
+      const params: FetchTasksParams = {
+        projectId: projectId!,
+        page,
+      };
 
-  async function handleDeleteTask(id: string) {
-    setDeletingTaskId(id);
-    const success = await deleteTask(id);
-    setDeletingTaskId(null);
+      if (values.search) params.search = values.search;
+      if (values.status) params.status = values.status;
+      if (values.priority) params.priority = values.priority;
+      if (values.dueDateFrom) params.dueDateFrom = values.dueDateFrom;
+      if (values.dueDateTo) params.dueDateTo = values.dueDateTo;
 
-    if (!success) return;
+      return params;
+    },
+    [projectId]
+  );
 
-    if (tasks.length === 1 && pageFromUrl > 1) {
-      updateUrl({ page: pageFromUrl > 2 ? String(pageFromUrl - 1) : "" });
-    } else {
-      await fetchTasks(buildTaskParams(filterValues, pageFromUrl));
-    }
-  }
+  const handleFilterChange = useCallback(
+    (values: TaskFilterValues) => {
+      updateUrl({
+        search: values.search,
+        status: values.status,
+        priority: values.priority,
+        dueDateFrom: values.dueDateFrom,
+        dueDateTo: values.dueDateTo,
+        page: "",
+      });
+    },
+    [updateUrl]
+  );
 
-  async function handleStatusChange(id: string, status: TaskStatus) {
-    setUpdatingStatusId(id);
-    await updateTaskStatus(id, status);
-    setUpdatingStatusId(null);
+  const handlePageChange = useCallback(
+    (p: number) => {
+      updateUrl({ page: p > 1 ? String(p) : "" });
+    },
+    [updateUrl]
+  );
 
-    if (viewingTask && viewingTask.id === id) {
-      setViewingTask((prev) => (prev ? { ...prev, status } : null));
-    }
-  }
+  const handleSaveTask = useCallback(
+    async (data: TablesInsert<"tasks"> | TablesUpdate<"tasks">) => {
+      setSavingTask(true);
 
-  function handleViewTask(task: Task) {
+      if (editingTask) {
+        await updateTask(editingTask.id, data as TablesUpdate<"tasks">);
+        await fetchTasks(buildTaskParams(filterValues, pageFromUrl));
+      } else {
+        await createTask({
+          ...(data as TablesInsert<"tasks">),
+          project_id: projectId!,
+        });
+
+        if (pageFromUrl === 1) {
+          await fetchTasks(buildTaskParams(filterValues, 1));
+        } else {
+          updateUrl({ page: "" });
+        }
+      }
+
+      setSavingTask(false);
+      setTaskModalOpen(false);
+      setEditingTask(null);
+    },
+    [
+      editingTask,
+      projectId,
+      pageFromUrl,
+      filterValues,
+      updateUrl,
+      buildTaskParams,
+      fetchTasks,
+      updateTask,
+      createTask,
+    ]
+  );
+
+  const handleDeleteTask = useCallback(
+    async (id: string) => {
+      setDeletingTaskId(id);
+      const success = await deleteTask(id);
+      setDeletingTaskId(null);
+
+      if (!success) return;
+
+      if (tasks.length === 1 && pageFromUrl > 1) {
+        updateUrl({ page: pageFromUrl > 2 ? String(pageFromUrl - 1) : "" });
+      } else {
+        await fetchTasks(buildTaskParams(filterValues, pageFromUrl));
+      }
+    },
+    [
+      tasks.length,
+      pageFromUrl,
+      filterValues,
+      updateUrl,
+      buildTaskParams,
+      fetchTasks,
+      deleteTask,
+    ]
+  );
+
+  const handleStatusChange = useCallback(
+    async (id: string, status: TaskStatus) => {
+      setUpdatingStatusId(id);
+      await updateTaskStatus(id, status);
+      setUpdatingStatusId(null);
+
+      if (viewingTask && viewingTask.id === id) {
+        setViewingTask((prev) => (prev ? { ...prev, status } : null));
+      }
+    },
+    [viewingTask, updateTaskStatus]
+  );
+
+  const handleViewTask = useCallback((task: Task) => {
     setViewingTask(task);
     setDetailModalOpen(true);
-  }
+  }, []);
+
+  const handleEditTask = useCallback((task: Task) => {
+    setEditingTask(task);
+    setTaskModalOpen(true);
+  }, []);
 
   if (projectLoading) {
     return (
@@ -308,10 +355,7 @@ export function ProjectDetail() {
               <TaskCard
                 key={task.id}
                 task={task}
-                onEdit={(t) => {
-                  setEditingTask(t);
-                  setTaskModalOpen(true);
-                }}
+                onEdit={handleEditTask}
                 onDelete={handleDeleteTask}
                 onView={handleViewTask}
                 onStatusChange={handleStatusChange}

@@ -32,7 +32,6 @@ interface UseTasksReturn {
   updateTask: (id: string, data: TablesUpdate<"tasks">) => Promise<Task | null>;
   deleteTask: (id: string) => Promise<boolean>;
   updateTaskStatus: (id: string, status: TaskStatus) => Promise<Task | null>;
-  updateTaskPriority: (id: string, priority: TaskPriority) => Promise<Task | null>;
 }
 
 export function useTasks(): UseTasksReturn {
@@ -163,13 +162,6 @@ export function useTasks(): UseTasksReturn {
     [updateTask]
   );
 
-  const updateTaskPriority = useCallback(
-    async (id: string, priority: TaskPriority): Promise<Task | null> => {
-      return updateTask(id, { priority });
-    },
-    [updateTask]
-  );
-
   return {
     tasks,
     totalCount,
@@ -181,6 +173,5 @@ export function useTasks(): UseTasksReturn {
     updateTask,
     deleteTask,
     updateTaskStatus,
-    updateTaskPriority,
   };
 }
