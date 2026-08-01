@@ -5,3 +5,7 @@ node_modules
 .env.example
 # Supabase Docker secrets
 supabase/docker/.env
+
+# Build artifacts
+*.tsbuildinfo
+frontend/dist/
