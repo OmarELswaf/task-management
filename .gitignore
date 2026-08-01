@@ -9,3 +9,4 @@ supabase/docker/.env
 # Build artifacts
 *.tsbuildinfo
 frontend/dist/
+frontend/vite.config.d.ts
