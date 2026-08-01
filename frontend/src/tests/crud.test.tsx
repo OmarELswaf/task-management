@@ -97,8 +97,8 @@ describe("Project CRUD", () => {
       update: vi.fn().mockReturnThis(),
       delete: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
-      order: vi.fn().mockResolvedValue({ data: [mockProject], error: null, count: 1 }),
-      range: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      range: vi.fn().mockResolvedValue({ data: [mockProject], error: null, count: 1 }),
       single: vi.fn().mockReturnThis(),
       ilike: vi.fn().mockReturnThis(),
       gte: vi.fn().mockReturnThis(),
@@ -125,7 +125,7 @@ describe("Project CRUD", () => {
     await user.click(createButtons[0]);
 
     await waitFor(() => {
-      expect(screen.getByText("Create Project")).toBeInTheDocument();
+      expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
     });
   });
 
@@ -139,11 +139,9 @@ describe("Project CRUD", () => {
 
     await user.click(screen.getAllByText("Create Project")[0]);
 
-    await waitFor(() => {
-      expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
-    });
-
-    await user.click(screen.getByRole("button", { name: /create project$/i }));
+    const nameInput = await screen.findByLabelText(/name/i);
+    const form = nameInput.closest("form") as HTMLElement;
+    await user.click(within(form).getByRole("button", { name: /create project$/i }));
 
     expect(screen.getByText("Project name is required")).toBeInTheDocument();
   });
@@ -157,8 +155,8 @@ describe("Project CRUD", () => {
       update: vi.fn().mockReturnThis(),
       delete: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
-      order: vi.fn().mockResolvedValue({ data: [], error: null, count: 0 }),
-      range: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      range: vi.fn().mockResolvedValue({ data: [], error: null, count: 0 }),
       single: vi.fn().mockResolvedValue({ data: mockProject, error: null }),
       ilike: vi.fn().mockReturnThis(),
       gte: vi.fn().mockReturnThis(),
@@ -174,12 +172,10 @@ describe("Project CRUD", () => {
 
     await user.click(screen.getAllByText("Create Project")[0]);
 
-    await waitFor(() => {
-      expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
-    });
-
-    await user.type(screen.getByLabelText(/name/i), "New Project");
-    await user.click(screen.getByRole("button", { name: /create project$/i }));
+    const nameInput = await screen.findByLabelText(/name/i);
+    const form = nameInput.closest("form") as HTMLElement;
+    await user.type(nameInput, "New Project");
+    await user.click(within(form).getByRole("button", { name: /create project$/i }));
 
     await waitFor(() => {
       expect(queryBuilder.insert).toHaveBeenCalled();
@@ -193,8 +189,8 @@ describe("Project CRUD", () => {
       update: vi.fn().mockReturnThis(),
       delete: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
-      order: vi.fn().mockResolvedValue({ data: null, error: { message: "Failed to load" }, count: 0 }),
-      range: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      range: vi.fn().mockResolvedValue({ data: null, error: { message: "Failed to load" }, count: 0 }),
       single: vi.fn().mockReturnThis(),
       ilike: vi.fn().mockReturnThis(),
       gte: vi.fn().mockReturnThis(),

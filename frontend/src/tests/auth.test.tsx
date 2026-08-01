@@ -30,9 +30,9 @@ beforeEach(() => {
 });
 
 describe("Login Page", () => {
-  it("renders sign in form", () => {
+  it("renders sign in form", async () => {
     renderWithProviders(<Login />);
-    expect(screen.getByRole("heading", { name: /sign in/i })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /sign in/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /sign in/i })).toBeInTheDocument();
@@ -42,7 +42,7 @@ describe("Login Page", () => {
     const user = userEvent.setup();
     renderWithProviders(<Login />);
 
-    await user.click(screen.getByRole("button", { name: /sign in/i }));
+    await user.click(await screen.findByRole("button", { name: /sign in/i }));
 
     expect(screen.getByText("Email is required")).toBeInTheDocument();
     expect(screen.getByText("Password is required")).toBeInTheDocument();
@@ -52,7 +52,7 @@ describe("Login Page", () => {
     const user = userEvent.setup();
     renderWithProviders(<Login />);
 
-    await user.type(screen.getByLabelText(/email/i), "notanemail");
+    await user.type(await screen.findByLabelText(/email/i), "notanemail");
     await user.type(screen.getByLabelText(/password/i), "validPass1");
     await user.click(screen.getByRole("button", { name: /sign in/i }));
 
@@ -63,7 +63,7 @@ describe("Login Page", () => {
     const user = userEvent.setup();
     renderWithProviders(<Login />);
 
-    await user.type(screen.getByLabelText(/email/i), "test@example.com");
+    await user.type(await screen.findByLabelText(/email/i), "test@example.com");
     await user.type(screen.getByLabelText(/password/i), "ab");
     await user.click(screen.getByRole("button", { name: /sign in/i }));
 
@@ -78,7 +78,7 @@ describe("Login Page", () => {
 
     renderWithProviders(<Login />);
 
-    await user.type(screen.getByLabelText(/email/i), "test@example.com");
+    await user.type(await screen.findByLabelText(/email/i), "test@example.com");
     await user.type(screen.getByLabelText(/password/i), "correctPassword1");
     await user.click(screen.getByRole("button", { name: /sign in/i }));
 
@@ -98,7 +98,7 @@ describe("Login Page", () => {
 
     renderWithProviders(<Login />);
 
-    await user.type(screen.getByLabelText(/email/i), "test@example.com");
+    await user.type(await screen.findByLabelText(/email/i), "test@example.com");
     await user.type(screen.getByLabelText(/password/i), "wrongPassword1");
     await user.click(screen.getByRole("button", { name: /sign in/i }));
 
@@ -107,16 +107,16 @@ describe("Login Page", () => {
     });
   });
 
-  it("renders link to register page", () => {
+  it("renders link to register page", async () => {
     renderWithProviders(<Login />);
-    expect(screen.getByRole("link", { name: /sign up/i })).toHaveAttribute("href", "/register");
+    expect(await screen.findByRole("link", { name: /sign up/i })).toHaveAttribute("href", "/register");
   });
 });
 
 describe("Register Page", () => {
-  it("renders registration form", () => {
+  it("renders registration form", async () => {
     renderWithProviders(<Register />);
-    expect(screen.getByRole("heading", { name: /create an account/i })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /create an account/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
   });
 
@@ -124,7 +124,7 @@ describe("Register Page", () => {
     const user = userEvent.setup();
     renderWithProviders(<Register />);
 
-    await user.type(screen.getByLabelText(/email/i), "test@example.com");
+    await user.type(await screen.findByLabelText(/email/i), "test@example.com");
     await user.type(screen.getAllByLabelText(/password/i)[0], "password123");
     await user.type(screen.getByLabelText(/confirm password/i), "differentPass");
     await user.click(screen.getByRole("button", { name: /create account/i }));
@@ -140,7 +140,7 @@ describe("Register Page", () => {
 
     renderWithProviders(<Register />);
 
-    await user.type(screen.getByLabelText(/email/i), "new@example.com");
+    await user.type(await screen.findByLabelText(/email/i), "new@example.com");
     await user.type(screen.getAllByLabelText(/password/i)[0], "password123");
     await user.type(screen.getByLabelText(/confirm password/i), "password123");
     await user.click(screen.getByRole("button", { name: /create account/i }));
@@ -161,7 +161,7 @@ describe("Register Page", () => {
 
     renderWithProviders(<Register />);
 
-    await user.type(screen.getByLabelText(/email/i), "new@example.com");
+    await user.type(await screen.findByLabelText(/email/i), "new@example.com");
     await user.type(screen.getAllByLabelText(/password/i)[0], "password123");
     await user.type(screen.getByLabelText(/confirm password/i), "password123");
     await user.click(screen.getByRole("button", { name: /create account/i }));
@@ -171,9 +171,9 @@ describe("Register Page", () => {
     });
   });
 
-  it("renders link to login page", () => {
+  it("renders link to login page", async () => {
     renderWithProviders(<Register />);
-    expect(screen.getByRole("link", { name: /sign in/i })).toHaveAttribute("href", "/login");
+    expect(await screen.findByRole("link", { name: /sign in/i })).toHaveAttribute("href", "/login");
   });
 });
 
