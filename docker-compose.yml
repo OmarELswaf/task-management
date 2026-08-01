@@ -2,6 +2,17 @@ include:
   - ./supabase/docker/docker-compose.yml
 
 services:
+  db:
+    volumes:
+      - ./supabase/migrations/20240101000001_projects.sql:/docker-entrypoint-initdb.d/migrations/20240101000001_projects.sql:ro
+      - ./supabase/migrations/20240101000002_tasks.sql:/docker-entrypoint-initdb.d/migrations/20240101000002_tasks.sql:ro
+      - ./supabase/migrations/20240101000003_comments.sql:/docker-entrypoint-initdb.d/migrations/20240101000003_comments.sql:ro
+      - ./supabase/migrations/20240101000004_rls-policies.sql:/docker-entrypoint-initdb.d/migrations/20240101000004_rls-policies.sql:ro
+      - ./supabase/migrations/20240101000005_fix-table-grants.sql:/docker-entrypoint-initdb.d/migrations/20240101000005_fix-table-grants.sql:ro
+      - ./supabase/migrations/20240101000006_auto-user-id-trigger.sql:/docker-entrypoint-initdb.d/migrations/20240101000006_auto-user-id-trigger.sql:ro
+      - ./supabase/migrations/20240101000007_add_project_color.sql:/docker-entrypoint-initdb.d/migrations/20240101000007_add_project_color.sql:ro
+      - ./supabase/seed.sql:/docker-entrypoint-initdb.d/migrations/99-project-seed.sql:ro
+
   frontend:
     build:
       context: ./frontend

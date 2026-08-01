@@ -20,13 +20,12 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- Test Users
 -- =============================================================
 
-INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data, aud, role)
+INSERT INTO auth.users (id, email, encrypted_password, created_at, updated_at, raw_app_meta_data, raw_user_meta_data, aud, role)
 VALUES
     (
         gen_random_uuid(),
         'alice@example.com',
         crypt('password123', gen_salt('bf')),
-        now(),
         now(),
         now(),
         '{"provider":"email","providers":["email"]}',
@@ -40,24 +39,58 @@ VALUES
         crypt('password123', gen_salt('bf')),
         now(),
         now(),
-        now(),
         '{"provider":"email","providers":["email"]}',
         '{"full_name":"Bob Smith"}',
         'authenticated',
         'authenticated'
     );
 
-INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, created_at, updated_at)
-SELECT
-    gen_random_uuid(),
-    id,
-    jsonb_build_object('sub', id, 'email', email),
-    'email',
-    email,
-    now(),
-    now()
-FROM auth.users
-WHERE email IN ('alice@example.com', 'bob@example.com');
+-- Mark emails as confirmed. The column name depends on whether GoTrue
+-- has migrated the auth schema yet: the Docker base image uses a plain
+-- `confirmed_at`, while the GoTrue-migrated schema (Supabase CLI /
+-- running stack) uses `email_confirmed_at` (with `confirmed_at` then
+-- GENERATED). Set whichever exists.
+DO $$
+DECLARE
+    has_email_confirmed boolean;
+BEGIN
+    SELECT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'email_confirmed_at'
+    ) INTO has_email_confirmed;
+
+    IF has_email_confirmed THEN
+        UPDATE auth.users SET email_confirmed_at = now()
+        WHERE email IN ('alice@example.com', 'bob@example.com');
+    ELSE
+        UPDATE auth.users SET confirmed_at = now()
+        WHERE email IN ('alice@example.com', 'bob@example.com');
+    END IF;
+END
+$$;
+
+-- Link users to an email identity. GoTrue creates auth.identities at
+-- runtime; during a fresh Docker init the table does not exist yet, so
+-- skip and let GoTrue's backfill migration (20221125140132) create the
+-- identities for email/password users on startup. The Supabase CLI flow
+-- has the table present, so the insert runs there.
+DO $$
+BEGIN
+    IF to_regclass('auth.identities') IS NOT NULL THEN
+        INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, created_at, updated_at)
+        SELECT
+            gen_random_uuid(),
+            id,
+            jsonb_build_object('sub', id, 'email', email),
+            'email',
+            email,
+            now(),
+            now()
+        FROM auth.users
+        WHERE email IN ('alice@example.com', 'bob@example.com');
+    END IF;
+END
+$$;
 
 -- =============================================================
 -- Projects for Alice
