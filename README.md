@@ -6,11 +6,12 @@ A full-stack task management application built with React, TypeScript, and a loc
 
 | Layer                | Technology                                                                   |
 | -------------------- | ---------------------------------------------------------------------------- |
-| **Frontend**         | React 18, TypeScript, React Router v6, Tailwind CSS, shadcn/ui, Lucide React |
-| **Auth**             | Supabase GoTrue v2.153 (local, auto-confirm enabled)                         |
-| **API**              | PostgREST v12.2 (auto-generated REST from PostgreSQL schema)                 |
-| **Database**         | PostgreSQL 15 (Supabase build 15.8.1.020)                                    |
-| **Reverse Proxy**    | Nginx (serves SPA, routes `/auth/v1/` and `/rest/v1/`)                       |
+| **Frontend**         | React 18, TypeScript, React Router v6, Tailwind CSS |
+| **Auth**             | Supabase GoTrue v2.189 (local, auto-confirm enabled)                         |
+| **API**              | PostgREST v14.12 (auto-generated REST from PostgreSQL schema)                |
+| **Database**         | PostgreSQL 17 (Supabase build 17.6.1.136)                                    |
+| **API Gateway**      | Kong 3.9 (routes `/auth/v1/` to GoTrue, `/rest/v1/` to PostgREST)            |
+| **Web Server**       | Nginx (serves built SPA at `:5173`)                                          |
 | **Containerization** | Docker & Docker Compose                                                      |
 | **Testing**          | Vitest, React Testing Library, jsdom                                         |
 
@@ -23,33 +24,38 @@ A full-stack task management application built with React, TypeScript, and a loc
                                      │
                           ┌──────────▼──────────┐
                           │   Nginx (frontend)  │
-                          │   SPA + API Proxy   │
+                          │    serves SPA       │
+                          └──────────┬──────────┘
+                                     │  /auth/v1/*, /rest/v1/*
+                          ┌──────────▼──────────┐
+                          │   Kong :8000        │
+                          │   API Gateway       │
                           └──┬──────────────┬───┘
                              │              │
-                    ┌────────▼───┐   ┌──────▼────────┐
-                    │ /auth/v1/* │   │ /rest/v1/*    │
-                    │ GoTrue     │   │ PostgREST     │
-                    │ :9999      │   │ :3000         │
-                    └──────┬─────┘   └──────┬────────┘
-                           │                │
-                           └────────┬───────┘
-                                    │
+                     ┌────────▼───┐   ┌──────▼────────┐
+                     │ /auth/v1/* │   │ /rest/v1/*    │
+                     │ GoTrue     │   │ PostgREST     │
+                     │ :9999      │   │ :3000         │
+                     └──────┬─────┘   └──────┬────────┘
+                            │                │
+                            └────────┬───────┘
+                                     │
                           ┌─────────▼─────────┐
                           │   PostgreSQL :5432 │
                           │   + pgcrypto       │
                           └───────────────────┘
 ```
 
-The frontend Nginx container serves the built React SPA at `localhost:5173` and acts as a reverse proxy for the Supabase services. All browser requests to `/auth/v1/` are forwarded to GoTrue (port 9999) and requests to `/rest/v1/` are forwarded to PostgREST (port 3000). This eliminates CORS issues and keeps a single origin.
+The frontend Nginx container serves the built React SPA at `localhost:5173`. The SPA calls the API at `localhost:8000`, which is handled by the Kong API gateway. Kong routes requests to `/auth/v1/` to GoTrue (port 9999) and requests to `/rest/v1/` to PostgREST (port 3000), plus the other Supabase services (storage, realtime, etc.). This keeps a single origin and eliminates CORS issues.
 
 ### Project Structure
 
 ```
-├── docker-compose.yml        # Full stack orchestration (db, auth, rest, frontend, seed)
+├── docker-compose.yml        # Compose override (migrations, seed, frontend)
 ├── .env.example              # Environment variable template
 ├── frontend/
 │   ├── Dockerfile            # Multi-stage build (Node → Nginx)
-│   ├── nginx.conf            # Reverse proxy + SPA fallback
+│   ├── nginx.conf            # SPA serving (API handled by Kong)
 │   ├── src/
 │   │   ├── components/       # Reusable UI components
 │   │   │   ├── common/       #   Pagination, ProtectedRoute
@@ -66,11 +72,16 @@ The frontend Nginx container serves the built React SPA at `localhost:5173` and 
 │   │   └── tests/            # Vitest test suites
 │   └── package.json
 └── supabase/
+    ├── docker/               # Upstream Supabase compose (db, auth, rest, kong, …)
     ├── migrations/           # SQL migration files (applied in order)
     │   ├── 01-projects.sql
     │   ├── 02-tasks.sql
     │   ├── 03-comments.sql
-    │   └── 04-rls-policies.sql
+    │   ├── 04-rls-policies.sql
+    │   ├── 05-fix-table-grants.sql
+    │   ├── 06-auto-user-id-trigger.sql
+    │   ├── 07-add-project-color.sql
+    │   └── 08-auto-updated-at.sql
     └── seed.sql              # Test users, projects, tasks, comments
 ```
 
@@ -123,22 +134,19 @@ npm run test:watch  # Watch mode for development
 
 Three test suites cover:
 
-- **auth.test.ts** — Authentication flows including login validation, sign-in, registration validation, and protected route behavior.
-- **crud.test.ts** — Project CRUD flows and task comment submission/display behavior.
-- **filtering.test.ts** — Search debounce, status/priority/date filters, clear filters behavior, and pagination rendering.
+- **auth.test.tsx** — Authentication flows including login validation, sign-in, registration validation, and protected route behavior.
+- **crud.test.tsx** — Project CRUD flows and task comment submission/display behavior.
+- **filtering.test.tsx** — Search debounce, status/priority/date filters, clear filters behavior, and pagination rendering.
 
 Current test status:
 
-- 27 tests passing
-- 17 pre-existing failures related to test mocks/environment setup
+- 44 tests passing
 
 ### Verification Status
 
 - **Production build:** ✅ Passing
-- **Filtering tests:** ✅ Passing
+- **Test suite:** ✅ 44/44 tests passing
 - **Application behavior:** ✅ Verified manually with local Supabase stack
-
-Some existing test cases require mock updates to fully match the current Supabase implementation. These are test-environment issues and do not affect the implemented application functionality.
 
 ## Engineering Design Decisions
 
@@ -152,14 +160,15 @@ All data access is governed by PostgreSQL Row-Level Security policies using `aut
 
 This layered approach means the PostgREST API is safe to expose directly to the client — the database enforces isolation at the row level regardless of what the client requests.
 
-### Local Supersetack Architecture
+### Local Supabase Stack Architecture
 
 Instead of using Supabase Cloud or the Supabase CLI, the stack runs standard Docker images for each Supabase component:
 
-- **supabase/postgres:15.8.1.020** — A PostgreSQL 15 image with the Supabase schema pre-installed (auth schema, pgcrypto, etc.). Migrations are mounted into `/docker-entrypoint-initdb.d/` for automatic execution on first database initialization.
-- **supabase/gotrue:v2.153.0** — Standalone GoTrue server with auto-confirm enabled (no email verification), configured via `GOTRUE_MAILER_AUTOCONFIRM=true`.
-- **postgrest/postgrest:v12.2.0** — Auto-generates a REST API from the `public` schema. Uses the `authenticator` role and `anon` role for JWT-based request authentication.
-- **seed container** — An ephemeral Alpine container that runs after the database and auth services are healthy, inserting test users (via `auth.users` + `auth.identities`), projects, tasks, and comments.
+- **supabase/postgres:17.6.1.136** — A PostgreSQL 17 image with the Supabase schema pre-installed (auth schema, pgcrypto, etc.). Migrations are mounted into `/docker-entrypoint-initdb.d/` for automatic execution on first database initialization.
+- **supabase/gotrue:v2.189.0** — Standalone GoTrue server with auto-confirm enabled (no email verification), configured via `GOTRUE_MAILER_AUTOCONFIRM=true`.
+- **postgrest/postgrest:v14.12** — Auto-generates a REST API from the `public` schema. Uses the `authenticator` role and `anon` role for JWT-based request authentication.
+- **kong/kong:3.9.1** — API gateway that routes `/auth/v1/` to GoTrue and `/rest/v1/` to PostgREST.
+- **Seed data** — `supabase/seed.sql` is mounted as `99-project-seed.sql` and runs on first database initialization, inserting test users (via `auth.users` + `auth.identities`), projects, tasks, and comments.
 
 This approach provides a production-like Supabase experience locally without external dependencies or a Supabase account.
 
