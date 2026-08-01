@@ -73,6 +73,7 @@ The frontend Nginx container serves the built React SPA at `localhost:5173`. The
 │   └── package.json
 └── supabase/
     ├── docker/               # Upstream Supabase compose (db, auth, rest, kong, …)
+│   └── .env.example      # Template for supabase/docker/.env (committed)
     ├── migrations/           # SQL migration files (applied in order)
     │   ├── 01-projects.sql
     │   ├── 02-tasks.sql
@@ -98,14 +99,17 @@ The frontend Nginx container serves the built React SPA at `localhost:5173`. The
 git clone <repo-url>
 cd HomeAssignment
 
-# 2. Copy environment file and customize (optional)
+# 2. Reconstruct BOTH environment files from their committed templates
 cp .env.example .env
+cp supabase/docker/.env.example supabase/docker/.env
 
 # 3. Start everything with a single command
 docker compose up --build
 ```
 
-The first build may take several minutes (installing npm dependencies, pulling Docker images). Subsequent starts are near-instant.
+> **Why two env files?** The root `docker-compose.yml` includes the upstream Supabase compose file from `supabase/docker/docker-compose.yml`. Compose reads the *included* file's variables from its sibling `supabase/docker/.env`, and the project-level variables (frontend build args, etc.) from the root `.env`. Both templates are committed so a fresh clone stays reproducible.
+
+The first build may take several minutes (installing npm dependencies, pulling Docker images). Subsequent starts are near-instant. Migrations and `seed.sql` run automatically the first time the database volume is initialized; they are skipped if a populated volume already exists, so your data is preserved across restarts.
 
 ### Access the Application
 

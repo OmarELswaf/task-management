@@ -1,10 +1,12 @@
 node_modules
-node_modules
 .env
 .env.*
 .env.example
 # Supabase Docker secrets
 supabase/docker/.env
+# ...but DO track the committed upstream template (used to rebuild
+# supabase/docker/.env on a fresh clone)
+!supabase/docker/.env.example
 
 # Build artifacts
 *.tsbuildinfo
