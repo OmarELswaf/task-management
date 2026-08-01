@@ -11,6 +11,7 @@ services:
       - ./supabase/migrations/20240101000005_fix-table-grants.sql:/docker-entrypoint-initdb.d/migrations/20240101000005_fix-table-grants.sql:ro
       - ./supabase/migrations/20240101000006_auto-user-id-trigger.sql:/docker-entrypoint-initdb.d/migrations/20240101000006_auto-user-id-trigger.sql:ro
       - ./supabase/migrations/20240101000007_add_project_color.sql:/docker-entrypoint-initdb.d/migrations/20240101000007_add_project_color.sql:ro
+      - ./supabase/migrations/20240101000008_auto_updated_at.sql:/docker-entrypoint-initdb.d/migrations/20240101000008_auto_updated_at.sql:ro
       - ./supabase/seed.sql:/docker-entrypoint-initdb.d/migrations/99-project-seed.sql:ro
 
   frontend:
