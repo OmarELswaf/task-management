@@ -1,6 +1,8 @@
 import type { Tables } from "@/types/database";
 import type { Database } from "@/types/database";
 import { CommentSection } from "@/components/comments/CommentSection";
+import { formatDate, formatDateTime } from "@/lib/format";
+import { STATUS_CYCLE, statusConfig, priorityConfig } from "@/lib/taskConfig";
 
 type Task = Tables<"tasks">;
 type TaskStatus = Database["public"]["Enums"]["task_status"];
@@ -10,41 +12,6 @@ interface TaskDetailModalProps {
   task: Task | null;
   onClose: () => void;
   onStatusChange: (id: string, status: TaskStatus) => Promise<void>;
-}
-
-const statusConfig: Record<TaskStatus, { label: string; class: string }> = {
-  Todo: { label: "Todo", class: "bg-blue-100 text-blue-700 border-blue-200" },
-  "In Progress": {
-    label: "In Progress",
-    class: "bg-yellow-100 text-yellow-700 border-yellow-200",
-  },
-  Done: { label: "Done", class: "bg-green-100 text-green-700 border-green-200" },
-};
-
-const priorityColors: Record<string, string> = {
-  Low: "bg-slate-100 text-slate-600 border-slate-200",
-  Medium: "bg-blue-100 text-blue-700 border-blue-200",
-  High: "bg-orange-100 text-orange-700 border-orange-200",
-};
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function formatDateTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
 }
 
 export function TaskDetailModal({
@@ -57,11 +24,10 @@ export function TaskDetailModal({
 
   const statusInfo = statusConfig[task.status];
 
-  const statusCycle: TaskStatus[] = ["Todo", "In Progress", "Done"];
-  const currentIdx = statusCycle.indexOf(task.status);
+  const currentIdx = STATUS_CYCLE.indexOf(task.status);
 
   function canMoveTo(s: TaskStatus): boolean {
-    const idx = statusCycle.indexOf(s);
+    const idx = STATUS_CYCLE.indexOf(s);
     return Math.abs(idx - currentIdx) === 1;
   }
 
@@ -113,13 +79,13 @@ export function TaskDetailModal({
             {statusInfo.label}
           </span>
           <span
-            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${priorityColors[task.priority]}`}
+            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${priorityConfig[task.priority].class}`}
           >
             {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
           </span>
           {task.due_date && (
             <span className="inline-flex items-center rounded-full border border-input bg-background px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-              Due {formatDate(task.due_date)}
+              Due {formatDate(task.due_date, { weekday: true, year: true })}
             </span>
           )}
         </div>
@@ -134,7 +100,7 @@ export function TaskDetailModal({
         <div className="mb-6">
           <h4 className="mb-2 text-sm font-medium">Quick Status Change</h4>
           <div className="flex flex-wrap gap-2">
-            {statusCycle.map((s) => {
+            {STATUS_CYCLE.map((s) => {
               const cfg = statusConfig[s];
               const isCurrent = s === task.status;
               const canMove = canMoveTo(s);

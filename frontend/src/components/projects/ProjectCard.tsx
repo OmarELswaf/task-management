@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { Tables } from "@/types/database";
+import { formatDate } from "@/lib/format";
 
 type Project = Tables<"projects">;
 
@@ -24,15 +25,6 @@ const colorMap: Record<string, string> = {
 function getColorClass(color: string | null): string {
   const c = color?.toLowerCase() ?? "";
   return colorMap[c] ?? "bg-slate-100 text-slate-700 border-slate-200";
-}
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
 }
 
 export function ProjectCard({ project, onEdit, onDelete, deleting }: ProjectCardProps) {
@@ -61,7 +53,7 @@ export function ProjectCard({ project, onEdit, onDelete, deleting }: ProjectCard
       )}
 
       <div className="flex items-center justify-between border-t pt-3 text-xs text-muted-foreground">
-        <span>Created {formatDate(project.created_at)}</span>
+        <span>Created {formatDate(project.created_at, { year: true })}</span>
 
         <div className="flex items-center gap-1">
           <button

@@ -237,6 +237,7 @@ export function ProjectsList() {
       )}
 
       <ProjectModal
+        key={editingProject?.id ?? "new"}
         open={modalOpen}
         project={editingProject}
         onClose={() => {

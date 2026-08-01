@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import type { Tables, TablesInsert, TablesUpdate } from "@/types/database";
 import type { Database } from "@/types/database";
 
@@ -35,25 +35,14 @@ export function TaskModal({
   onSave,
   saving,
 }: TaskModalProps) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState<TaskStatus>("Todo");
-  const [priority, setPriority] = useState<TaskPriority>("Medium");
-  const [dueDate, setDueDate] = useState("");
+  const [title, setTitle] = useState(task?.title ?? "");
+  const [description, setDescription] = useState(task?.description ?? "");
+  const [status, setStatus] = useState<TaskStatus>(task?.status ?? "Todo");
+  const [priority, setPriority] = useState<TaskPriority>(task?.priority ?? "Medium");
+  const [dueDate, setDueDate] = useState(task?.due_date ? task.due_date.slice(0, 10) : "");
   const [titleError, setTitleError] = useState<string | null>(null);
 
   const isEditing = task !== null;
-
-  useEffect(() => {
-    if (open) {
-      setTitle(task?.title ?? "");
-      setDescription(task?.description ?? "");
-      setStatus(task?.status ?? "Todo");
-      setPriority(task?.priority ?? "Medium");
-      setDueDate(task?.due_date ? task.due_date.slice(0, 10) : "");
-      setTitleError(null);
-    }
-  }, [open, task]);
 
   if (!open) return null;
 

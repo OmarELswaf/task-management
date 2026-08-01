@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/AuthContext";
 import { useTasks } from "@/hooks/useTasks";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { TaskModal } from "@/components/tasks/TaskModal";
@@ -20,7 +19,6 @@ type TaskStatus = Database["public"]["Enums"]["task_status"];
 export function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user } = useAuth();
   const {
     tasks,
     totalCount,
@@ -340,6 +338,7 @@ export function ProjectDetail() {
       )}
 
       <TaskModal
+        key={editingTask?.id ?? "new"}
         open={taskModalOpen}
         task={editingTask}
         projectId={projectId!}

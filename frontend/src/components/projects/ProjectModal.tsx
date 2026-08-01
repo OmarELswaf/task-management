@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import type { Tables, TablesInsert, TablesUpdate } from "@/types/database";
 
 type Project = Tables<"projects">;
@@ -23,21 +23,12 @@ const COLOR_OPTIONS = [
 ];
 
 export function ProjectModal({ open, project, onClose, onSave, saving }: ProjectModalProps) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [color, setColor] = useState("blue");
+  const [name, setName] = useState(project?.name ?? "");
+  const [description, setDescription] = useState(project?.description ?? "");
+  const [color, setColor] = useState(project?.color ?? "blue");
   const [nameError, setNameError] = useState<string | null>(null);
 
   const isEditing = project !== null;
-
-  useEffect(() => {
-    if (open) {
-      setName(project?.name ?? "");
-      setDescription(project?.description ?? "");
-      setColor(project?.color ?? "blue");
-      setNameError(null);
-    }
-  }, [open, project]);
 
   if (!open) return null;
 

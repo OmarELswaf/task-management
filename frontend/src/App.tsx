@@ -1,12 +1,29 @@
-import { Link } from "react-router-dom";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Suspense, lazy } from "react";
+import { Link, Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { Login } from "@/pages/auth/Login";
-import { Register } from "@/pages/auth/Register";
-import { ProjectsList } from "@/pages/projects/ProjectsList";
-import { ProjectDetail } from "@/pages/projects/ProjectDetail";
 import { useAuth } from "@/contexts/AuthContext";
 import { LogoutButton } from "@/components/common/LogoutButton";
+
+const Login = lazy(() =>
+  import("@/pages/auth/Login").then((m) => ({ default: m.Login }))
+);
+const Register = lazy(() =>
+  import("@/pages/auth/Register").then((m) => ({ default: m.Register }))
+);
+const ProjectsList = lazy(() =>
+  import("@/pages/projects/ProjectsList").then((m) => ({ default: m.ProjectsList }))
+);
+const ProjectDetail = lazy(() =>
+  import("@/pages/projects/ProjectDetail").then((m) => ({ default: m.ProjectDetail }))
+);
+
+function RouteFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+    </div>
+  );
+}
 
 function Dashboard() {
   const { user } = useAuth();
@@ -87,43 +104,45 @@ function Dashboard() {
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/projects"
-        element={
-          <ProtectedRoute>
-            <ProjectsList />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/projects/:projectId"
-        element={
-          <ProtectedRoute>
-            <ProjectDetail />
-          </ProtectedRoute>
-        }
-      />
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route
-        path="*"
-        element={
-          <div className="flex min-h-screen flex-col items-center justify-center gap-2">
-            <h1 className="text-4xl font-bold">404</h1>
-            <p className="text-muted-foreground">Page not found</p>
-          </div>
-        }
-      />
-    </Routes>
+    <Suspense fallback={<RouteFallback />}>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/projects"
+          element={
+            <ProtectedRoute>
+              <ProjectsList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/projects/:projectId"
+          element={
+            <ProtectedRoute>
+              <ProjectDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route
+          path="*"
+          element={
+            <div className="flex min-h-screen flex-col items-center justify-center gap-2">
+              <h1 className="text-4xl font-bold">404</h1>
+              <p className="text-muted-foreground">Page not found</p>
+            </div>
+          }
+        />
+      </Routes>
+    </Suspense>
   );
 }

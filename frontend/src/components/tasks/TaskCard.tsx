@@ -1,9 +1,10 @@
 import type { Tables } from "@/types/database";
 import type { Database } from "@/types/database";
+import { formatDate } from "@/lib/format";
+import { STATUS_CYCLE, statusConfig, priorityConfig } from "@/lib/taskConfig";
 
 type Task = Tables<"tasks">;
 type TaskStatus = Database["public"]["Enums"]["task_status"];
-type TaskPriority = Database["public"]["Enums"]["task_priority"];
 
 interface TaskCardProps {
   task: Task;
@@ -13,33 +14,6 @@ interface TaskCardProps {
   onStatusChange: (id: string, status: TaskStatus) => void;
   deleting: boolean;
   updatingStatus: boolean;
-}
-
-const statusConfig: Record<TaskStatus, { label: string; class: string }> = {
-  Todo: { label: "Todo", class: "bg-blue-100 text-blue-700 border-blue-200" },
-  "In Progress": {
-    label: "In Progress",
-    class: "bg-yellow-100 text-yellow-700 border-yellow-200",
-  },
-  Done: { label: "Done", class: "bg-green-100 text-green-700 border-green-200" },
-};
-
-const priorityConfig: Record<TaskPriority, { label: string; class: string }> = {
-  Low: { label: "Low", class: "bg-slate-100 text-slate-600 border-slate-200" },
-  Medium: {
-    label: "Medium",
-    class: "bg-blue-100 text-blue-700 border-blue-200",
-  },
-  High: { label: "High", class: "bg-orange-100 text-orange-700 border-orange-200" },
-};
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
 }
 
 function isOverdue(dateStr: string | null): boolean {
@@ -59,11 +33,10 @@ export function TaskCard({
   const statusInfo = statusConfig[task.status];
   const priorityInfo = priorityConfig[task.priority];
 
-  const statusCycle: TaskStatus[] = ["Todo", "In Progress", "Done"];
-  const currentStatusIndex = statusCycle.indexOf(task.status);
+  const currentStatusIndex = STATUS_CYCLE.indexOf(task.status);
   const nextStatus =
-    currentStatusIndex < statusCycle.length - 1
-      ? statusCycle[currentStatusIndex + 1]
+    currentStatusIndex < STATUS_CYCLE.length - 1
+      ? STATUS_CYCLE[currentStatusIndex + 1]
       : undefined;
 
   async function handleNextStatus() {

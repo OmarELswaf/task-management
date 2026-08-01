@@ -1,23 +1,10 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { useComments } from "@/hooks/useComments";
 import { useAuth } from "@/contexts/AuthContext";
-import type { Tables } from "@/types/database";
-
-type Comment = Tables<"comments">;
+import { formatDateTime } from "@/lib/format";
 
 interface CommentSectionProps {
   taskId: string;
-}
-
-function formatDateTime(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
 }
 
 export function CommentSection({ taskId }: CommentSectionProps) {

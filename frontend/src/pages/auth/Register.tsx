@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { EMAIL_REGEX } from "@/lib/validation";
 
 interface FormErrors {
   email?: string;
@@ -16,7 +17,7 @@ function validateForm(
   const errors: FormErrors = {};
   if (!email.trim()) {
     errors.email = "Email is required";
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  } else if (!EMAIL_REGEX.test(email)) {
     errors.email = "Invalid email address";
   }
   if (!password) {
@@ -33,7 +34,6 @@ function validateForm(
 }
 
 export function Register() {
-  const navigate = useNavigate();
   const { user, loading: authLoading, signUp } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
