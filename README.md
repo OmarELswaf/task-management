@@ -96,8 +96,8 @@ The frontend Nginx container serves the built React SPA at `localhost:5173`. The
 
 ```bash
 # 1. Clone the repository
-git clone <repo-url>
-cd HomeAssignment
+git clone https://github.com/OmarELswaf/task-management.git
+cd task-management
 
 # 2. Reconstruct BOTH environment files from their committed templates
 cp .env.example .env
@@ -142,15 +142,18 @@ Three test suites cover:
 - **crud.test.tsx** — Project CRUD flows and task comment submission/display behavior.
 - **filtering.test.tsx** — Search debounce, status/priority/date filters, clear filters behavior, and pagination rendering.
 
-Current test status:
+Latest isolated frontend check (23 November 2026):
 
-- 44 tests passing
+- 44 tests passing across 3 test files
+- TypeScript and Vite production build passed
+- React act/router warnings are present in test output
+- This check does not start or validate the Docker/Supabase services
 
 ### Verification Status
 
 - **Production build:** ✅ Passing
 - **Test suite:** ✅ 44/44 tests passing
-- **Application behavior:** ✅ Verified manually with local Supabase stack
+- **Local Supabase behavior:** Not rechecked as part of the 23 November 2026 frontend verification
 
 ## Engineering Design Decisions
 
